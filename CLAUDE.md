@@ -10,17 +10,18 @@ A fonte da verdade é `docs/design.md`. Leia antes de qualquer tarefa nova. Se u
 
 ## Fase atual
 
-**Fase 3: histórico**, em paralelo à contagem da Fase 1. Nada de modelo ou app ainda.
+**Fase 4: modelo**, em paralelo à contagem da Fase 1. Nada de previsões diárias, placar ou app ainda.
 
-**Fase 1 em acompanhamento:** a coleta precisa completar 7 dias seguidos sem falha nas execuções agendadas, a partir de 2026-11-05. Não altere `daily.yml`, `ingestion/steam_prices.py` nem `dbt/seeds/catalog.csv` durante a contagem.
+**Fase 1 em acompanhamento:** a coleta precisa completar 7 dias seguidos sem falha nas execuções agendadas, a partir de 2026-11-05. Não altere `daily.yml`, `ingestion/steam_prices.py` nem `dbt/seeds/catalog.csv` durante a contagem. Se a coleta falhar, ela tem prioridade sobre a Fase 4.
 
-Tarefas da Fase 3, nesta ordem:
-1. `ingestion/itad_history.py`: carga única e local do histórico dos jogos do catálogo para a bronze, sem filtro.
-2. `stg_itad_history`: extrair e tipar os registros.
-3. Confirmar o corte de 2019-01-01 no catálogo inteiro.
-4. Unir ao `fct_price_daily`, preenchendo os dias entre registros do ITAD; nos dias com as duas fontes, vale a Steam.
+Tarefas da Fase 4, nesta ordem:
+1. `dbt/seeds/steam_sale_calendar.csv`: datas das promoções sazonais, conferidas com os picos de `fct_sale_events`.
+2. `dim_games`: carga única e local de lançamento e publisher para a bronze, e modelo dbt.
+3. `ml_features`: uma linha por jogo e dia, com features e rótulo, sem vazamento.
+4. `ml/`: baseline e regressão logística com divisão temporal, registrados no MLflow local.
+5. Relatório de modelo vs. baseline.
 
-Ao fim da Fase 3, pare e peça confirmação antes da Fase 4.
+O LightGBM entra depois da regressão logística. Ao fim da Fase 4, pare e peça confirmação antes da Fase 5.
 
 ## Stack
 

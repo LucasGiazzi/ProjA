@@ -1,0 +1,33 @@
+version: 2
+
+seeds:
+  - name: catalog
+    description: Jogos acompanhados, gerados por ingestion/build_catalog.py.
+  - name: steam_sale_calendar
+    description: >-
+      Promoções sazonais da Steam. Até 2022, início e fim vêm dos picos em
+      fct_sale_events; a partir de 2023, das datas publicadas pela Valve.
+      Só entram eventos com pico nos dados. Para datas publicadas,
+      last_sale_date é o dia anterior ao fim oficial, porque a promoção acaba
+      no meio do dia.
+    data_tests:
+      - valid_sale_dates
+    columns:
+      - name: sale_name
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["lunar_new_year", "spring", "summer", "halloween", "autumn", "winter"]
+      - name: start_date
+        data_tests:
+          - not_null
+          - unique
+      - name: last_sale_date
+        data_tests:
+          - not_null
+      - name: date_source
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["data_peak", "published"]

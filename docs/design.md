@@ -169,7 +169,7 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 | 6. App V1 | 3 telas no Streamlit Cloud | Link público funcionando |
 | 7. V2 | Perfil de qualquer usuário | Fora da V1 |
 
-Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, exceto a Fase 1, que deve continuar rodando em paralelo a todas as outras. Exceção aprovada: as Fases 2 e 3 começaram durante a contagem de 7 dias da Fase 1, que ainda precisa cumprir seu critério.
+Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, exceto a Fase 1, que deve continuar rodando em paralelo a todas as outras. Exceção aprovada: as Fases 2, 3 e 4 começaram durante a contagem de 7 dias da Fase 1, que ainda precisa cumprir seu critério.
 
 ## 12. Registro de decisões
 
@@ -191,3 +191,5 @@ Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, excet
 | 2026-11-04 | Fase 3 iniciada durante a contagem de 7 dias da Fase 1 | A carga do ITAD é única, grava em outra pasta da bronze e não toca na coleta diária |
 | 2026-11-04 | Carga do ITAD roda uma vez, localmente | Execução única, sem necessidade de mais um secret no GitHub |
 | 2026-11-04 | Nos dias com as duas fontes, vale o preço da Steam; preenchimento só no período do ITAD | A Steam é a medição direta, e buraco na coleta diária deve continuar visível como falha |
+| 2026-11-04 | Fase 4 iniciada durante a contagem de 7 dias da Fase 1 | O modelo treina com o histórico já validado e não toca na coleta; falha na coleta tem prioridade |
+| 2026-11-04 | MLflow local na Fase 4; persistência decidida na Fase 5 | A persistência só importa quando o retreino for automático |

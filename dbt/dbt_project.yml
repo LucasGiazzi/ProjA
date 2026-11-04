@@ -30,3 +30,9 @@ seeds:
         app_id: bigint
         name: varchar
         source: varchar
+    steam_sale_calendar:
+      +column_types:
+        sale_name: varchar
+        start_date: date
+        last_sale_date: date
+        date_source: varchar
