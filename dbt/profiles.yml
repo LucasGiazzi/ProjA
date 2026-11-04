@@ -1,0 +1,13 @@
+# Sem segredos neste arquivo: o token vem da variável de ambiente HF_TOKEN.
+vale_esperar:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: vale_esperar.duckdb
+      threads: 2
+      extensions:
+        - httpfs
+      secrets:
+        - type: huggingface
+          token: "{{ env_var('HF_TOKEN') }}"

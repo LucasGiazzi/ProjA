@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: Respostas brutas das fontes, gravadas no Hugging Face pelos coletores.
+    tables:
+      - name: steam_prices
+        description: Uma linha por jogo e dia com a entrada da Steam como veio.
+        config:
+          meta:
+            external_location: >-
+              read_parquet(
+                'hf://datasets/{{ env_var("HF_DATASET_REPO") }}/steam_prices/date=*/data.parquet',
+                hive_partitioning = true
+              )

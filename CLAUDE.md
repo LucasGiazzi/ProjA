@@ -10,16 +10,18 @@ A fonte da verdade é `docs/design.md`. Leia antes de qualquer tarefa nova. Se u
 
 ## Fase atual
 
-**Fase 1: coleta diária.** A Fase 0 terminou e os resultados estão em `spikes/FINDINGS.md`. Nada de dbt, modelo ou app ainda.
+**Fase 2: silver e gold básicos**, em paralelo à contagem da Fase 1. Nada de modelo ou app ainda.
 
-Tarefas, uma por vez, nesta ordem:
-1. Ambiente: `venv` com Python 3.12 e `requirements.txt`.
-2. `ingestion/build_catalog.py`: gerar `dbt/seeds/catalog.csv` com os ~500 jogos pagos mais vendidos da loja Brasil, somando a wishlist do Lucas.
-3. `ingestion/steam_prices.py`: coletar o preço do catálogo em lotes de 50 e gravar a bronze no Hugging Face, particionada por data, com testes em `tests/`.
-4. `.github/workflows/daily.yml`: rodar a coleta todo dia, com `workflow_dispatch` para testes.
-5. Acompanhar até completar 7 dias seguidos sem falha.
+**Fase 1 em acompanhamento:** a coleta precisa completar 7 dias seguidos sem falha nas execuções agendadas, a partir de 2026-11-05. Não altere `daily.yml` nem `dbt/seeds/catalog.csv` durante a contagem.
 
-Ao fim da Fase 1, pare e peça confirmação antes da Fase 2. A coleta continua rodando nas fases seguintes.
+Tarefas da Fase 2, uma por vez, nesta ordem:
+1. Projeto dbt em `dbt/`: `dbt-duckdb`, perfil, seed do catálogo e fonte da bronze no Hugging Face.
+2. `stg_steam_prices`: extrair e tipar os campos de `raw_json`, com testes.
+3. `fct_price_daily`: uma linha por jogo e dia, com testes de qualidade.
+4. `fct_sale_events`: cada promoção com início, fim e desconto máximo.
+5. `.github/workflows/dbt.yml`: `dbt build` no Actions em workflow separado, com `workflow_dispatch`.
+
+Ao fim da Fase 2, pare e peça confirmação antes da Fase 3.
 
 ## Stack
 

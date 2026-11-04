@@ -1,0 +1,26 @@
+name: vale_esperar
+version: "0.1.0"
+profile: vale_esperar
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+target-path: target
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  vale_esperar:
+    staging:
+      +materialized: view
+    silver:
+      +materialized: table
+    gold:
+      +materialized: table
+
+seeds:
+  vale_esperar:
+    catalog:
+      +column_types:
+        app_id: bigint
+        name: varchar
+        source: varchar
