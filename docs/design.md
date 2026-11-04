@@ -146,6 +146,8 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 | Steam devolve HTTP 500 em alguns lotes grandes, por causa desconhecida | Lotes de 50, divisão do lote em caso de falha e falhas registradas em log |
 | Corte de 2019 no histórico do ITAD veio de apenas 3 jogos | Confirmar no catálogo completo na Fase 3 |
 | Catálogo gerado pelos mais vendidos pode favorecer jogos em promoção na data da geração (225 de 497 no primeiro dia) | Avaliar o efeito no modelo na Fase 4 |
+| Onde gravar silver e gold para o app ler? O DuckDB do Actions é apagado a cada execução | Decidir antes da Fase 5; candidato natural: Parquet no Hugging Face |
+| `dim_games` está na silver, mas não entrou na Fase 2; lançamento, publisher e gêneros exigem nova coleta, e a consulta agrupada só funciona com `price_overview` | Decidir antes da Fase 4, porque as features dependem desses campos |
 | Endpoint da Steam pode mudar sem aviso | Testes de volume no dbt alertam; coletor isolado facilita ajuste |
 | Onde persistir o MLflow (a máquina do Actions é apagada a cada execução)? | Decidir na Fase 4: MLflow hospedado gratuito (ex.: DagsHub) ou diretório de runs salvo no Hugging Face |
 | Termos de uso para publicar o dataset | Revisar termos da Steam e do ITAD antes de tornar o dataset público; começar privado |
@@ -156,7 +158,7 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 |---|---|---|
 | 0. Testes de viabilidade | Scripts em `spikes/` respondendo às 3 perguntas da seção 10 | Cumprido em 2026-11-04: respostas registradas neste documento e em `spikes/FINDINGS.md` |
 | 1. Coleta diária | Coletor Steam BR + workflow diário gravando bronze no HF | 7 dias seguidos sem falha |
-| 2. Silver e gold básicos | Projeto dbt com `stg`, `fct_price_daily`, `fct_sale_events`, testes | `dbt build` verde no Actions |
+| 2. Silver e gold básicos | Projeto dbt com `stg`, `fct_price_daily`, `fct_sale_events`, testes | Cumprido em 2026-11-04: `dbt build` verde no Actions |
 | 3. Histórico | Carga única do ITAD integrada à silver | Histórico unificado por jogo |
 | 4. Modelo | Features, baseline, logística, MLflow | Relatório modelo vs. baseline |
 | 5. Previsões e placar | Previsões diárias append-only + placar | Primeira previsão resolvida |
