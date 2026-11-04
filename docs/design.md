@@ -24,7 +24,7 @@ Casos de uso centrais:
 
 **V1 (alvo deste documento)**
 - Região: somente Brasil (BRL).
-- Catálogo de ~500 jogos relevantes, coletado diariamente.
+- Catálogo de ~500 jogos relevantes, incluindo todos os jogos da wishlist do autor, coletado diariamente.
 - Wishlist e biblioteca do próprio autor (perfil público).
 - Modelo de previsão de promoção em 30 dias + baseline.
 - Placar público de acertos.
@@ -65,11 +65,11 @@ salário mínimo                                        gold: tabelas do app
 
 | Fonte | Uso | Acesso | Status |
 |---|---|---|---|
-| Steam Store `appdetails` | Preço diário BR (inicial, final, desconto) | Público, sem chave, ~200 req / 5 min | Endpoint interno, sem garantia de estabilidade. Validar na Fase 0 |
-| IsThereAnyDeal API | Histórico de preços para treino | Chave gratuita | Profundidade e suporte a BRL a validar na Fase 0 |
-| Steam `IWishlistService/GetWishlist` | Wishlist do autor | Perfil público | Validar na Fase 0 |
-| Steam `IPlayerService/GetOwnedGames` | Biblioteca (esconder jogos já comprados) | Chave da Steam Web API + perfil público | Validar na Fase 0 |
-| Seed: catálogo | Lista dos ~500 jogos | Arquivo no repo, revisão mensal | A montar |
+| Steam Store `appdetails` | Preço diário BR (inicial, final, desconto) | Público, sem chave, ~200 req / 5 min | Validado na Fase 0: BRL fora do Brasil e consulta agrupada. Endpoint interno, sem garantia de estabilidade |
+| IsThereAnyDeal API | Histórico de preços para treino | Chave gratuita | Validado na Fase 0: histórico em BRL, usado a partir de 2019-01-01 |
+| Steam `IWishlistService/GetWishlist` | Wishlist do autor | Perfil público | Validado na Fase 0 |
+| Steam `IPlayerService/GetOwnedGames` | Biblioteca (esconder jogos já comprados) | Chave da Steam Web API + perfil público | Validado na Fase 0 |
+| Seed: catálogo | Lista dos ~500 jogos, incluindo a wishlist do autor | Arquivo no repo, revisão mensal | A montar |
 | Seed: calendário de promoções | Datas das promoções sazonais da Steam | Arquivo no repo, manual | A montar |
 | Seed: salário mínimo BR | Custo em horas de trabalho | Arquivo no repo | A montar |
 
@@ -81,8 +81,8 @@ salário mínimo                                        gold: tabelas do app
 
 **Silver** (dbt)
 - `stg_*`: limpeza e tipagem de cada fonte.
-- `fct_price_daily`: uma linha por jogo e dia, unindo histórico do ITAD e coleta diária da Steam.
-- `fct_sale_events`: cada promoção com início, fim e desconto máximo.
+- `fct_price_daily`: uma linha por jogo e dia, unindo histórico do ITAD (a partir de 2019-01-01) e coleta diária da Steam. O ITAD é um log de mudanças de preço, então os dias entre registros são preenchidos com o último preço conhecido.
+- `fct_sale_events`: cada promoção com início, fim e desconto máximo. Mudança de preço cheio sem desconto é reajuste, não promoção.
 - `dim_games`: dados cadastrais do jogo (lançamento, publisher, gêneros, preço base).
 
 **Gold** (dbt + Python)
@@ -99,7 +99,9 @@ salário mínimo                                        gold: tabelas do app
 - Tratamento de limite de requisições: espera e nova tentativa com backoff.
 - Falha de um jogo não derruba a execução; jogos com falha são registrados em log.
 - Segredos (Hugging Face, IsThereAnyDeal, Steam Web API, SteamID) ficam nos Secrets do GitHub.
-- Volume diário estimado (V1): ~500 consultas. Se a consulta agrupada funcionar, cai para ~10.
+- Consulta agrupada em lotes de 50: ~10 chamadas por dia para ~500 jogos.
+- HTTP 500 em um lote: dividir o lote ao meio e tentar de novo, registrando a falha em log. Lotes grandes podem falhar sem resposta parcial.
+- `data: []` na resposta da Steam significa jogo sem preço, não erro.
 
 **Prioridade de calendário:** a coleta diária deve entrar em produção o quanto antes. Cada dia sem coleta é um dia de dado real perdido para o placar.
 
@@ -118,6 +120,7 @@ salário mínimo                                        gold: tabelas do app
 **Baseline obrigatório:** "sim se existe promoção sazonal dentro da janela". O modelo só é considerado útil se superar o baseline, e o resultado é publicado de qualquer forma.
 
 **Validação**
+- Dados a partir de 2019-01-01; preços em BRL anteriores a isso não são confiáveis.
 - Divisão temporal (treina no passado, testa em meses posteriores). Nunca divisão aleatória.
 - Métricas: precisão e recall da classe "promoção", Brier score e curva de calibração.
 
@@ -137,9 +140,11 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 
 | Risco / pergunta | Como resolver |
 |---|---|
-| Steam devolve BRL quando a chamada vem de servidor do GitHub (fora do Brasil)? | Fase 0 |
-| Consulta agrupada de vários jogos funciona? | Fase 0 |
-| Quanto histórico o ITAD fornece, e em BRL? | Fase 0 |
+| Steam devolve BRL quando a chamada vem de servidor do GitHub (fora do Brasil)? | Respondido: sim, testado com runner nos EUA (`spikes/FINDINGS.md`) |
+| Consulta agrupada de vários jogos funciona? | Respondido: sim, sem máximo fixo; adotados lotes de 50 (`spikes/FINDINGS.md`) |
+| Quanto histórico o ITAD fornece, e em BRL? | Respondido: desde o lançamento, em BRL, confiável a partir de 2019 (`spikes/FINDINGS.md`) |
+| Steam devolve HTTP 500 em alguns lotes grandes, por causa desconhecida | Lotes de 50, divisão do lote em caso de falha e falhas registradas em log |
+| Corte de 2019 no histórico do ITAD veio de apenas 3 jogos | Confirmar no catálogo completo na Fase 3 |
 | Endpoint da Steam pode mudar sem aviso | Testes de volume no dbt alertam; coletor isolado facilita ajuste |
 | Onde persistir o MLflow (a máquina do Actions é apagada a cada execução)? | Decidir na Fase 4: MLflow hospedado gratuito (ex.: DagsHub) ou diretório de runs salvo no Hugging Face |
 | Termos de uso para publicar o dataset | Revisar termos da Steam e do ITAD antes de tornar o dataset público; começar privado |
@@ -148,7 +153,7 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 
 | Fase | Entrega | Critério de pronto |
 |---|---|---|
-| 0. Testes de viabilidade | Scripts em `spikes/` respondendo às 3 perguntas da seção 10 | Respostas registradas neste documento |
+| 0. Testes de viabilidade | Scripts em `spikes/` respondendo às 3 perguntas da seção 10 | Cumprido em 2026-11-04: respostas registradas neste documento e em `spikes/FINDINGS.md` |
 | 1. Coleta diária | Coletor Steam BR + workflow diário gravando bronze no HF | 7 dias seguidos sem falha |
 | 2. Silver e gold básicos | Projeto dbt com `stg`, `fct_price_daily`, `fct_sale_events`, testes | `dbt build` verde no Actions |
 | 3. Histórico | Carga única do ITAD integrada à silver | Histórico unificado por jogo |
@@ -171,3 +176,6 @@ Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, excet
 | 2026-11-04 | Janela de previsão de 30 dias | Casa com a decisão real e gera exemplos positivos suficientes |
 | 2026-11-04 | Coleta ampla, vitrine enxuta | O modelo precisa de muitos exemplos; o app mostra só o relevante |
 | 2026-11-04 | Recomendações na V3 | Segundo modelo com outra lógica; evita inflar o escopo da V1 |
+| 2026-11-04 | Coleta de preços em lotes de 50, com divisão do lote em caso de HTTP 500 | Lotes grandes falham de forma imprevisível e sem resposta parcial |
+| 2026-11-04 | Histórico do ITAD usado a partir de 2019-01-01 | Preços em BRL anteriores oscilam e parecem convertidos |
+| 2026-11-04 | Wishlist do autor faz parte do catálogo | Toda linha da tela "Sua wishlist" precisa de previsão na V1 |

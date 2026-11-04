@@ -145,7 +145,7 @@ Os três scripts em `spikes/` reproduzem os resultados principais. A busca biná
 
 ## Ajustes propostos no `docs/design.md`
 
-Nada abaixo foi aplicado. Cada item depende de aprovação do Lucas.
+Aprovados pelo Lucas e aplicados em 2026-11-04.
 
 | Seção | Ajuste | Motivo |
 |---|---|---|
