@@ -155,7 +155,8 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 | `dim_games` exige uma chamada por jogo, porque a consulta agrupada só aceita `price_overview` | Resolvido na Fase 4 com carga única; na revisão do catálogo, buscar só os jogos novos |
 | Endpoint da Steam pode mudar sem aviso | Testes de volume no dbt alertam; coletor isolado facilita ajuste |
 | Onde persistir o MLflow (a máquina do Actions é apagada a cada execução)? | Decidir na Fase 4: MLflow hospedado gratuito (ex.: DagsHub) ou diretório de runs salvo no Hugging Face |
-| Termos de uso para publicar o dataset | Revisar termos da Steam e do ITAD antes de tornar o dataset público; começar privado |
+| Termos de uso para publicar o dataset | Termos lidos em 2026-11-04. Steam: licença para distribuir dados a usuários finais pelo app, sem cláusula sobre datasets públicos; manter o dataset privado |
+| Termos do ITAD proíbem app que possa ser visto como concorrente, e uso privado pede contato prévio | Pedir confirmação ao ITAD antes de publicar o app. Até lá, dataset privado e nada publicado com dados do ITAD. Avaliar mudar a tabela do Diferencial e a tela Preço absurdo |
 
 ## 11. Fases de execução
 
