@@ -13,3 +13,12 @@ sources:
                 'hf://datasets/{{ env_var("HF_DATASET_REPO") }}/steam_prices/date=*/data.parquet',
                 hive_partitioning = true
               )
+      - name: itad_history
+        description: Uma linha por jogo com o histórico completo do ITAD como veio.
+        config:
+          meta:
+            external_location: >-
+              read_parquet(
+                'hf://datasets/{{ env_var("HF_DATASET_REPO") }}/itad_history/date=*/data.parquet',
+                hive_partitioning = true
+              )

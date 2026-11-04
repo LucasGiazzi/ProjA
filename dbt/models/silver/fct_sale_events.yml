@@ -17,6 +17,10 @@ models:
               arguments:
                 to: ref('catalog')
                 field: app_id
+      - name: game_name
+        description: Nome do jogo, vindo do catálogo.
+        data_tests:
+          - not_null
       - name: start_date
         description: Primeiro dia com desconto observado.
         data_tests:
@@ -32,7 +36,7 @@ models:
         data_tests:
           - not_null
       - name: days_observed
-        description: Dias com desconto observados; pode ser menor que a duração se houve buraco na coleta.
+        description: Dias com desconto na tabela diária, incluindo os preenchidos; pode ser menor que a duração se houve buraco na coleta.
         data_tests:
           - not_null
       - name: start_is_known
@@ -49,6 +53,11 @@ unit_tests:
     description: Cobre início desconhecido, promoção aberta, buraco na coleta e jogo sem promoção.
     model: fct_sale_events
     given:
+      - input: ref('catalog')
+        rows:
+          - {app_id: 1, name: Jogo 1}
+          - {app_id: 2, name: Jogo 2}
+          - {app_id: 4, name: Jogo 4}
       - input: ref('fct_price_daily')
         rows:
           # Jogo 1: promoção fechada com desconto variável e outra ainda aberta.

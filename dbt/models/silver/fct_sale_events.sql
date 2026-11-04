@@ -46,6 +46,7 @@ sales as (
 select
     sales.app_id || '-' || strftime(sales.start_date, '%Y%m%d') as sale_id,
     sales.app_id,
+    catalog.name as game_name,
     sales.start_date,
     -- Sem preço cheio depois da promoção, ela ainda está aberta.
     case
@@ -60,3 +61,5 @@ select
 from sales
 inner join latest
     on sales.app_id = latest.app_id
+left join {{ ref('catalog') }} as catalog
+    on sales.app_id = catalog.app_id

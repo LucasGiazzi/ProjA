@@ -11,6 +11,8 @@ clean-targets: ["target", "dbt_packages"]
 vars:
   # Fração mínima de jogos com resposta por dia, definida no design.
   min_daily_volume_rate: 0.95
+  # Antes desta data, os preços em BRL do ITAD têm ruído de conversão.
+  itad_history_start_date: "2019-01-01"
 
 models:
   vale_esperar:

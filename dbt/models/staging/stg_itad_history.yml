@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: stg_itad_history
+    description: Histórico do ITAD tipado, uma linha por mudança de preço.
+    columns:
+      - name: app_id
+        description: Appid do jogo na Steam.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('catalog')
+                field: app_id
+      - name: itad_id
+        description: Identificador do jogo no ITAD.
+        data_tests:
+          - not_null
+      - name: load_date
+        description: Data da carga, vinda da partição da bronze.
+        data_tests:
+          - not_null
+      - name: changed_at
+        description: Momento da mudança de preço, informado pelo ITAD.
+        data_tests:
+          - not_null
+      - name: change_date
+        description: Data UTC da mudança de preço.
+        data_tests:
+          - not_null
+      - name: has_deal
+        description: Falso se o registro vier sem preço.
+        data_tests:
+          - not_null
+      - name: currency
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["BRL"]
+      - name: initial_cents
+        description: Preço sem desconto, em centavos.
+      - name: final_cents
+        description: Preço pago, em centavos.
+      - name: discount_percent
+        description: Desconto de 0 a 100.
+
+unit_tests:
+  - name: stg_itad_history_opens_records_from_latest_load
+    description: Abre os registros, usa a carga mais recente e aceita deal vazio.
+    model: stg_itad_history
+    given:
+      - input: source('bronze', 'itad_history')
+        format: sql
+        rows: |
+          select *
+          from (values
+              (1::bigint, 'id-1', '[{"timestamp": "2026-01-01T00:00:00+00:00", "deal": null}]', timestamptz '2026-10-01 00:00:00+00', 'itad_history', 200, date '2026-10-01'),
+              (1::bigint, 'id-1', '[{"timestamp": "2026-09-25T23:30:00-03:00", "deal": {"price": {"amountInt": 7999, "currency": "BRL"}, "regular": {"amountInt": 15999, "currency": "BRL"}, "cut": 50}}, {"timestamp": "2026-10-08T19:20:28+02:00", "deal": null}]', timestamptz '2026-11-04 00:00:00+00', 'itad_history', 200, date '2026-11-04'),
+              (2::bigint, 'id-2', null, timestamptz '2026-11-04 00:00:00+00', 'itad_history', 500, date '2026-11-04')
+          ) as fixture (app_id, itad_id, raw_json, collected_at, source, http_status, "date")
+    expect:
+      rows:
+        - {app_id: 1, load_date: 2026-11-04, change_date: 2026-09-26, has_deal: true, currency: BRL, initial_cents: 15999, final_cents: 7999, discount_percent: 50}
+        - {app_id: 1, load_date: 2026-11-04, change_date: 2026-10-08, has_deal: false, currency: null, initial_cents: null, final_cents: null, discount_percent: null}

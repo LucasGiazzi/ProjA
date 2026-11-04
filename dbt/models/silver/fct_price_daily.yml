@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: fct_price_daily
-    description: Preço por jogo e dia, somente com preços coletados.
+    description: Preço por jogo e dia, unindo o histórico do ITAD e a coleta da Steam.
     data_tests:
       - unique_game_day
       - valid_prices
@@ -15,12 +15,16 @@ models:
               arguments:
                 to: ref('catalog')
                 field: app_id
+      - name: game_name
+        description: Nome do jogo, vindo do catálogo.
+        data_tests:
+          - not_null
       - name: price_date
         description: Data do preço.
         data_tests:
           - not_null
-      - name: collected_at
-        description: Momento da coleta, em UTC.
+      - name: observed_at
+        description: Momento em que o preço foi coletado ou mudou no ITAD.
         data_tests:
           - not_null
       - name: currency
@@ -34,22 +38,61 @@ models:
         description: Preço pago, em centavos.
       - name: discount_percent
         description: Desconto de 0 a 100.
+      - name: price_source
+        description: Origem do preço.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["steam", "itad"]
+      - name: is_filled
+        description: Verdadeiro se o dia foi preenchido com o último preço conhecido.
+        data_tests:
+          - not_null
       - name: is_on_sale
         description: Verdadeiro se o jogo tem desconto no dia.
         data_tests:
           - not_null
 
 unit_tests:
-  - name: fct_price_daily_keeps_only_real_prices
-    description: Mantém preços com e sem desconto e descarta jogos sem preço.
+  - name: fct_price_daily_unifies_sources
+    description: >-
+      Cobre o corte de data, o preenchimento, a última mudança do dia, a
+      prioridade da Steam, o buraco na coleta e o registro sem deal.
     model: fct_price_daily
+    overrides:
+      vars:
+        itad_history_start_date: "2026-10-30"
     given:
+      - input: ref('catalog')
+        rows:
+          - {app_id: 1, name: Jogo 1}
+          - {app_id: 2, name: Jogo 2}
       - input: ref('stg_steam_prices')
         rows:
-          - {app_id: 1, price_date: 2026-11-04, has_price: true, currency: BRL, initial_cents: 14990, final_cents: 7495, discount_percent: 50}
-          - {app_id: 2, price_date: 2026-11-04, has_price: true, currency: BRL, initial_cents: 2499, final_cents: 2499, discount_percent: 0}
-          - {app_id: 3, price_date: 2026-11-04, has_price: false, currency: null, initial_cents: null, final_cents: null, discount_percent: null}
+          - {app_id: 1, price_date: 2026-11-03, has_price: true, currency: BRL, initial_cents: 1000, final_cents: 700, discount_percent: 30}
+          # Dia 11-04 sem coleta: deve continuar ausente.
+          - {app_id: 1, price_date: 2026-11-05, has_price: true, currency: BRL, initial_cents: 1000, final_cents: 1000, discount_percent: 0}
+          - {app_id: 3, price_date: 2026-11-03, has_price: false, currency: null, initial_cents: null, final_cents: null, discount_percent: null}
+      - input: ref('stg_itad_history')
+        rows:
+          # Anterior ao corte: só o preço que estava valendo no corte é usado.
+          - {app_id: 1, change_date: 2026-10-28, changed_at: "2026-10-28 10:00:00+00", has_deal: true, currency: BRL, initial_cents: 1000, final_cents: 500, discount_percent: 50}
+          # Duas mudanças no mesmo dia: vale a última.
+          - {app_id: 1, change_date: 2026-11-01, changed_at: "2026-11-01 10:00:00+00", has_deal: true, currency: BRL, initial_cents: 1000, final_cents: 900, discount_percent: 10}
+          - {app_id: 1, change_date: 2026-11-01, changed_at: "2026-11-01 20:00:00+00", has_deal: true, currency: BRL, initial_cents: 1000, final_cents: 1000, discount_percent: 0}
+          # Mesmo dia da Steam: vale a Steam.
+          - {app_id: 1, change_date: 2026-11-03, changed_at: "2026-11-03 10:00:00+00", has_deal: true, currency: BRL, initial_cents: 1000, final_cents: 100, discount_percent: 90}
+          # Jogo 2 sem Steam: o registro sem deal encerra o preenchimento.
+          - {app_id: 2, change_date: 2026-11-01, changed_at: "2026-11-01 10:00:00+00", has_deal: true, currency: BRL, initial_cents: 1000, final_cents: 800, discount_percent: 20}
+          - {app_id: 2, change_date: 2026-11-03, changed_at: "2026-11-03 10:00:00+00", has_deal: false, currency: null, initial_cents: null, final_cents: null, discount_percent: null}
     expect:
       rows:
-        - {app_id: 1, is_on_sale: true}
-        - {app_id: 2, is_on_sale: false}
+        - {app_id: 1, game_name: Jogo 1, price_date: 2026-10-30, discount_percent: 50, price_source: itad, is_filled: true, is_on_sale: true}
+        - {app_id: 1, game_name: Jogo 1, price_date: 2026-10-31, discount_percent: 50, price_source: itad, is_filled: true, is_on_sale: true}
+        - {app_id: 1, game_name: Jogo 1, price_date: 2026-11-01, discount_percent: 0, price_source: itad, is_filled: false, is_on_sale: false}
+        - {app_id: 1, game_name: Jogo 1, price_date: 2026-11-02, discount_percent: 0, price_source: itad, is_filled: true, is_on_sale: false}
+        - {app_id: 1, game_name: Jogo 1, price_date: 2026-11-03, discount_percent: 30, price_source: steam, is_filled: false, is_on_sale: true}
+        - {app_id: 1, game_name: Jogo 1, price_date: 2026-11-05, discount_percent: 0, price_source: steam, is_filled: false, is_on_sale: false}
+        - {app_id: 2, game_name: Jogo 2, price_date: 2026-11-01, discount_percent: 20, price_source: itad, is_filled: false, is_on_sale: true}
+        - {app_id: 2, game_name: Jogo 2, price_date: 2026-11-02, discount_percent: 20, price_source: itad, is_filled: true, is_on_sale: true}
