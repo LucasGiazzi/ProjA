@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: stg_steam_details
+    description: Dados cadastrais dos jogos, tipados, uma linha por jogo.
+    columns:
+      - name: app_id
+        description: Appid do jogo na Steam.
+        data_tests:
+          - not_null
+          - unique
+      - name: is_success
+        description: Campo success da resposta da Steam.
+        data_tests:
+          - not_null
+      - name: release_date
+        description: Data de lançamento; nula se a loja não informar uma data exata.
+      - name: publisher
+        description: Primeira publisher informada pela loja.
+
+unit_tests:
+  - name: stg_steam_details_parses_each_response_kind
+    description: Cobre data exata, data imprecisa, success falso e a carga mais recente.
+    model: stg_steam_details
+    given:
+      - input: source('bronze', 'steam_details')
+        format: sql
+        rows: |
+          select *
+          from (values
+              (1::bigint, '{"success": true, "data": {"type": "game", "name": "Antigo", "is_free": false, "release_date": {"coming_soon": false, "date": "1 Jan, 2000"}, "publishers": ["Velha"]}}', timestamptz '2026-10-01 00:00:00+00', 'steam_details', 200, date '2026-10-01'),
+              (1::bigint, '{"success": true, "data": {"type": "game", "name": "Jogo", "is_free": false, "release_date": {"coming_soon": false, "date": "26 Feb, 2016"}, "publishers": ["Editora", "Outra"], "developers": ["Estudio"], "genres": [{"id": "23", "description": "Indie"}, {"id": "3", "description": "RPG"}]}}', timestamptz '2026-11-04 00:00:00+00', 'steam_details', 200, date '2026-11-04'),
+              (2::bigint, '{"success": true, "data": {"type": "game", "name": "Futuro", "is_free": false, "release_date": {"coming_soon": true, "date": "Q1 2027"}}}', timestamptz '2026-11-04 00:00:00+00', 'steam_details', 200, date '2026-11-04'),
+              (3::bigint, '{"success": false}', timestamptz '2026-11-04 00:00:00+00', 'steam_details', 200, date '2026-11-04')
+          ) as fixture (app_id, raw_json, collected_at, source, http_status, "date")
+    expect:
+      rows:
+        - {app_id: 1, is_success: true, app_type: game, is_coming_soon: false, release_date: 2016-02-26, publisher: Editora, developer: Estudio}
+        - {app_id: 2, is_success: true, app_type: game, is_coming_soon: true, release_date: null, publisher: null, developer: null}
+        - {app_id: 3, is_success: false, app_type: null, is_coming_soon: null, release_date: null, publisher: null, developer: null}

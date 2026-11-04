@@ -10,3 +10,8 @@ dbt/dbt_packages/
 dbt/.user.yml
 *.duckdb
 *.duckdb.wal
+
+# MLflow local
+ml/mlflow.db
+mlruns/
+mlartifacts/

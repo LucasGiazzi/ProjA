@@ -1,0 +1,137 @@
+version: 2
+
+models:
+  - name: ml_features
+    description: Uma linha por jogo e dia, com features sem vazamento e o rótulo.
+    data_tests:
+      - unique_game_day
+    columns:
+      - name: app_id
+        data_tests:
+          - not_null
+      - name: price_date
+        data_tests:
+          - not_null
+      - name: is_on_sale
+        data_tests:
+          - not_null
+      - name: baseline_prediction
+        description: Verdadeiro se uma promoção sazonal cruza os próximos 30 dias.
+        data_tests:
+          - not_null
+      - name: has_sale_next_30d
+        description: Rótulo; vazio se os 30 dias seguintes não estiverem todos observados.
+
+unit_tests:
+  - name: ml_features_uses_only_the_past
+    description: >-
+      Valores calculados à mão. O desconto de 90% só existe no último dia, então
+      nenhuma linha anterior pode refletir esse valor.
+    model: ml_features
+    given:
+      - input: ref('fct_price_daily')
+        rows:
+          - {app_id: 1, price_date: 2026-01-05, initial_cents: 1000, discount_percent: 0, is_on_sale: false}
+          - {app_id: 1, price_date: 2026-01-10, initial_cents: 1000, discount_percent: 20, is_on_sale: true}
+          - {app_id: 1, price_date: 2026-01-12, initial_cents: 1000, discount_percent: 0, is_on_sale: false}
+          - {app_id: 1, price_date: 2026-02-10, initial_cents: 1000, discount_percent: 40, is_on_sale: true}
+          - {app_id: 1, price_date: 2026-02-12, initial_cents: 1000, discount_percent: 0, is_on_sale: false}
+          - {app_id: 1, price_date: 2026-03-20, initial_cents: 1000, discount_percent: 90, is_on_sale: true}
+      - input: ref('dim_games')
+        rows:
+          - {app_id: 1, publisher: Editora, release_date: 2026-01-01}
+      - input: ref('steam_sale_calendar')
+        rows:
+          - {sale_name: spring, start_date: 2026-03-19, last_sale_date: 2026-03-25}
+          - {sale_name: summer, start_date: 2026-06-25, last_sale_date: 2026-07-08}
+    expect:
+      rows:
+        - {app_id: 1, price_date: 2026-01-05, days_since_last_sale: null, avg_days_between_sales: null, sales_to_date: 0, sales_last_12_months: 0, max_discount_to_date: 0, typical_discount: null, days_to_next_seasonal: 73, is_seasonal_sale_today: false, month: 1, days_since_release: 4, base_price_cents: 1000, is_on_sale: false, discount_percent: 0, discount_vs_typical: null, baseline_prediction: false, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-10, days_since_last_sale: 0, avg_days_between_sales: null, sales_to_date: 1, sales_last_12_months: 1, max_discount_to_date: 20, typical_discount: 20.0, days_to_next_seasonal: 68, is_seasonal_sale_today: false, month: 1, days_since_release: 9, base_price_cents: 1000, is_on_sale: true, discount_percent: 20, discount_vs_typical: 0.0, baseline_prediction: false, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-12, days_since_last_sale: 2, avg_days_between_sales: null, sales_to_date: 1, sales_last_12_months: 1, max_discount_to_date: 20, typical_discount: 20.0, days_to_next_seasonal: 66, is_seasonal_sale_today: false, month: 1, days_since_release: 11, base_price_cents: 1000, is_on_sale: false, discount_percent: 0, discount_vs_typical: -20.0, baseline_prediction: false, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-02-10, days_since_last_sale: 0, avg_days_between_sales: 31.0, sales_to_date: 2, sales_last_12_months: 2, max_discount_to_date: 40, typical_discount: 30.0, days_to_next_seasonal: 37, is_seasonal_sale_today: false, month: 2, days_since_release: 40, base_price_cents: 1000, is_on_sale: true, discount_percent: 40, discount_vs_typical: 10.0, baseline_prediction: false, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-02-12, days_since_last_sale: 2, avg_days_between_sales: 31.0, sales_to_date: 2, sales_last_12_months: 2, max_discount_to_date: 40, typical_discount: 30.0, days_to_next_seasonal: 35, is_seasonal_sale_today: false, month: 2, days_since_release: 42, base_price_cents: 1000, is_on_sale: false, discount_percent: 0, discount_vs_typical: -30.0, baseline_prediction: false, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-03-20, days_since_last_sale: 0, avg_days_between_sales: 34.5, sales_to_date: 3, sales_last_12_months: 3, max_discount_to_date: 90, typical_discount: 50.0, days_to_next_seasonal: 97, is_seasonal_sale_today: true, month: 3, days_since_release: 78, base_price_cents: 1000, is_on_sale: true, discount_percent: 90, discount_vs_typical: 40.0, baseline_prediction: true, has_sale_next_30d: null}
+
+  - name: ml_features_label_needs_the_full_window
+    description: >-
+      Único desconto em 02-02, dados até 02-04. Antes de 01-03 a janela não
+      alcança o desconto; de 01-03 a 01-05 alcança; depois disso os 30 dias
+      seguintes não foram todos observados, e o rótulo fica vazio.
+    model: ml_features
+    given:
+      - input: ref('fct_price_daily')
+        format: sql
+        rows: |
+          select
+              1::bigint as app_id,
+              cast(day as date) as price_date,
+              1000 as initial_cents,
+              case when day = date '2026-02-02' then 50 else 0 end as discount_percent,
+              day = date '2026-02-02' as is_on_sale
+          from generate_series(date '2026-01-01', date '2026-02-04', interval 1 day) as t(day)
+      - input: ref('dim_games')
+        rows:
+          - {app_id: 1, publisher: Editora, release_date: 2025-01-01}
+      - input: ref('steam_sale_calendar')
+        rows:
+          - {sale_name: summer, start_date: 2026-06-25, last_sale_date: 2026-07-08}
+    expect:
+      rows:
+        - {app_id: 1, price_date: 2026-01-01, has_sale_next_30d: false}
+        - {app_id: 1, price_date: 2026-01-02, has_sale_next_30d: false}
+        - {app_id: 1, price_date: 2026-01-03, has_sale_next_30d: true}
+        - {app_id: 1, price_date: 2026-01-04, has_sale_next_30d: true}
+        - {app_id: 1, price_date: 2026-01-05, has_sale_next_30d: true}
+        - {app_id: 1, price_date: 2026-01-06, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-07, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-08, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-09, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-10, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-11, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-12, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-13, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-14, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-15, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-16, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-17, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-18, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-19, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-20, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-21, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-22, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-23, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-24, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-25, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-26, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-27, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-28, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-29, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-30, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-01-31, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-02-01, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-02-02, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-02-03, has_sale_next_30d: null}
+        - {app_id: 1, price_date: 2026-02-04, has_sale_next_30d: null}
+
+  - name: ml_features_publisher_rate_excludes_the_current_day
+    description: Outro jogo da publisher em promoção entra na taxa só no dia seguinte.
+    model: ml_features
+    given:
+      - input: ref('fct_price_daily')
+        rows:
+          - {app_id: 1, price_date: 2026-01-01, initial_cents: 1000, discount_percent: 0, is_on_sale: false}
+          - {app_id: 2, price_date: 2026-01-01, initial_cents: 1000, discount_percent: 50, is_on_sale: true}
+          - {app_id: 1, price_date: 2026-01-02, initial_cents: 1000, discount_percent: 0, is_on_sale: false}
+      - input: ref('dim_games')
+        rows:
+          - {app_id: 1, publisher: Editora, release_date: 2025-01-01}
+          - {app_id: 2, publisher: Editora, release_date: 2025-01-01}
+      - input: ref('steam_sale_calendar')
+        rows:
+          - {sale_name: summer, start_date: 2026-06-25, last_sale_date: 2026-07-08}
+    expect:
+      rows:
+        - {app_id: 1, price_date: 2026-01-01, publisher_sale_rate: null}
+        - {app_id: 2, price_date: 2026-01-01, publisher_sale_rate: null}
+        - {app_id: 1, price_date: 2026-01-02, publisher_sale_rate: 0.5}

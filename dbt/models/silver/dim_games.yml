@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: dim_games
+    description: Dados cadastrais de cada jogo do catálogo.
+    columns:
+      - name: app_id
+        description: Appid do jogo na Steam.
+        data_tests:
+          - not_null
+          - unique
+      - name: game_name
+        description: Nome do jogo, vindo do catálogo.
+        data_tests:
+          - not_null
+      - name: catalog_source
+        description: Origem do jogo no catálogo.
+        data_tests:
+          - not_null
+      - name: release_date
+        description: Data de lançamento; nula se a loja não informar uma data exata.
+      - name: publisher
+        description: Primeira publisher informada pela loja.
+      - name: base_price_cents
+        description: Preço cheio mais recente, em centavos. Não usar em features.

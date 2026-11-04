@@ -70,7 +70,7 @@ salário mínimo                                        gold: tabelas do app
 | Steam `IWishlistService/GetWishlist` | Wishlist do autor | Perfil público | Validado na Fase 0 |
 | Steam `IPlayerService/GetOwnedGames` | Biblioteca (esconder jogos já comprados) | Chave da Steam Web API + perfil público | Validado na Fase 0 |
 | Seed: catálogo | Lista dos ~500 jogos: pagos mais vendidos da loja Brasil + wishlist do autor | Arquivo no repo, revisão mensal | A montar |
-| Seed: calendário de promoções | Datas das promoções sazonais da Steam | Arquivo no repo, manual | A montar |
+| Seed: calendário de promoções | Datas das promoções sazonais da Steam | Arquivo no repo, manual | Pronto: 38 eventos, de 2019 a 2027 |
 | Seed: salário mínimo BR | Custo em horas de trabalho | Arquivo no repo | A montar |
 
 ## 6. Camadas de dados
@@ -117,12 +117,13 @@ salário mínimo                                        gold: tabelas do app
 - Jogo: dias desde o lançamento, preço base, taxa histórica de promoção da publisher.
 - Estado atual: está em promoção hoje? Desconto atual vs. desconto típico.
 
-**Baseline obrigatório:** "sim se existe promoção sazonal dentro da janela". O modelo só é considerado útil se superar o baseline, e o resultado é publicado de qualquer forma.
+**Baseline obrigatório:** "sim se existe promoção sazonal dentro da janela". O modelo só é considerado útil se superar o baseline, e o resultado é publicado de qualquer forma. A regra ingênua "sempre sim" também entra na comparação, porque acerta mais que o baseline.
 
 **Validação**
 - Dados a partir de 2019-01-01; preços em BRL anteriores a isso não são confiáveis.
 - Divisão temporal (treina no passado, testa em meses posteriores). Nunca divisão aleatória.
-- Métricas: precisão e recall da classe "promoção", Brier score e curva de calibração.
+- Métricas: precisão e recall da classe "promoção", Brier score e curva de calibração, com resultado principal nos jogos a preço cheio. Jogo já em promoção tende a continuar nela, o que infla as métricas.
+- Intervalo de 30 dias entre treino e teste, porque o rótulo olha 30 dias à frente.
 
 **Modelos:** regressão logística primeiro; gradient boosting (LightGBM) em seguida. Experimentos registrados no MLflow.
 
@@ -151,7 +152,7 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 | Catálogo contém itens que parecem não ser jogos comuns, como EA Play e iRacing | Avaliar na revisão mensal, depois da contagem da Fase 1 |
 | Catálogo gerado pelos mais vendidos pode favorecer jogos em promoção na data da geração (225 de 497 no primeiro dia) | Avaliar o efeito no modelo na Fase 4 |
 | Onde gravar silver e gold para o app ler? O DuckDB do Actions é apagado a cada execução | Decidir antes da Fase 5; candidato natural: Parquet no Hugging Face |
-| `dim_games` está na silver, mas não entrou na Fase 2; lançamento, publisher e gêneros exigem nova coleta, e a consulta agrupada só funciona com `price_overview` | Decidir antes da Fase 4, porque as features dependem desses campos |
+| `dim_games` exige uma chamada por jogo, porque a consulta agrupada só aceita `price_overview` | Resolvido na Fase 4 com carga única; na revisão do catálogo, buscar só os jogos novos |
 | Endpoint da Steam pode mudar sem aviso | Testes de volume no dbt alertam; coletor isolado facilita ajuste |
 | Onde persistir o MLflow (a máquina do Actions é apagada a cada execução)? | Decidir na Fase 4: MLflow hospedado gratuito (ex.: DagsHub) ou diretório de runs salvo no Hugging Face |
 | Termos de uso para publicar o dataset | Revisar termos da Steam e do ITAD antes de tornar o dataset público; começar privado |
@@ -164,7 +165,7 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 | 1. Coleta diária | Coletor Steam BR + workflow diário gravando bronze no HF | 7 dias seguidos sem falha |
 | 2. Silver e gold básicos | Projeto dbt com `stg`, `fct_price_daily`, `fct_sale_events`, testes | Cumprido em 2026-11-04: `dbt build` verde no Actions |
 | 3. Histórico | Carga única do ITAD integrada à silver | Cumprido em 2026-11-04: histórico unificado por jogo, com `dbt build` verde no Actions |
-| 4. Modelo | Features, baseline, logística, MLflow | Relatório modelo vs. baseline |
+| 4. Modelo | Features, baseline, logística, MLflow | Cumprido em 2026-11-04: `docs/model_report.md`. Modelo superou o baseline e a regra "sempre sim" |
 | 5. Previsões e placar | Previsões diárias append-only + placar | Primeira previsão resolvida |
 | 6. App V1 | 3 telas no Streamlit Cloud | Link público funcionando |
 | 7. V2 | Perfil de qualquer usuário | Fora da V1 |
@@ -193,3 +194,5 @@ Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, excet
 | 2026-11-04 | Nos dias com as duas fontes, vale o preço da Steam; preenchimento só no período do ITAD | A Steam é a medição direta, e buraco na coleta diária deve continuar visível como falha |
 | 2026-11-04 | Fase 4 iniciada durante a contagem de 7 dias da Fase 1 | O modelo treina com o histórico já validado e não toca na coleta; falha na coleta tem prioridade |
 | 2026-11-04 | MLflow local na Fase 4; persistência decidida na Fase 5 | A persistência só importa quando o retreino for automático |
+| 2026-11-04 | Resultado principal do modelo medido em jogos a preço cheio, comparando também com "sempre sim" | É o caso de uso central, e a regra ingênua acerta mais que o baseline |
+| 2026-11-04 | README em inglês | É o padrão em portfólios técnicos; o restante da documentação segue em português |

@@ -22,3 +22,12 @@ sources:
                 'hf://datasets/{{ env_var("HF_DATASET_REPO") }}/itad_history/date=*/data.parquet',
                 hive_partitioning = true
               )
+      - name: steam_details
+        description: Uma linha por jogo com os dados cadastrais da Steam como vieram.
+        config:
+          meta:
+            external_location: >-
+              read_parquet(
+                'hf://datasets/{{ env_var("HF_DATASET_REPO") }}/steam_details/date=*/data.parquet',
+                hive_partitioning = true
+              )

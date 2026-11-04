@@ -2,5 +2,7 @@ dbt-core==1.12.6
 dbt-duckdb==1.11.1
 duckdb==2.0.0
 huggingface_hub==2.4.0
+mlflow==3.18.0
 pyarrow==26.0.1
 pytest==9.2.0
+scikit-learn==1.9.1
