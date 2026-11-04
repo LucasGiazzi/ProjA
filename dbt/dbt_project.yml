@@ -8,6 +8,10 @@ test-paths: ["tests"]
 target-path: target
 clean-targets: ["target", "dbt_packages"]
 
+vars:
+  # Fração mínima de jogos com resposta por dia, definida no design.
+  min_daily_volume_rate: 0.95
+
 models:
   vale_esperar:
     staging:

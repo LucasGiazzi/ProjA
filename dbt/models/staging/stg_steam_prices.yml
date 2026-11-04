@@ -3,6 +3,11 @@ version: 2
 models:
   - name: stg_steam_prices
     description: Preços da Steam tipados, uma linha por jogo e dia de coleta.
+    data_tests:
+      - unique_game_day
+      - valid_prices:
+          config:
+            where: has_price
     columns:
       - name: app_id
         description: Appid do jogo na Steam.

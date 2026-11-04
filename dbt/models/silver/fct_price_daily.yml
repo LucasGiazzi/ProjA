@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: fct_price_daily
+    description: Preço por jogo e dia, somente com preços coletados.
+    data_tests:
+      - unique_game_day
+      - valid_prices
+    columns:
+      - name: app_id
+        description: Appid do jogo na Steam.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('catalog')
+                field: app_id
+      - name: price_date
+        description: Data do preço.
+        data_tests:
+          - not_null
+      - name: collected_at
+        description: Momento da coleta, em UTC.
+        data_tests:
+          - not_null
+      - name: currency
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["BRL"]
+      - name: initial_cents
+        description: Preço sem desconto, em centavos.
+      - name: final_cents
+        description: Preço pago, em centavos.
+      - name: discount_percent
+        description: Desconto de 0 a 100.
+      - name: is_on_sale
+        description: Verdadeiro se o jogo tem desconto no dia.
+        data_tests:
+          - not_null
+
+unit_tests:
+  - name: fct_price_daily_keeps_only_real_prices
+    description: Mantém preços com e sem desconto e descarta jogos sem preço.
+    model: fct_price_daily
+    given:
+      - input: ref('stg_steam_prices')
+        rows:
+          - {app_id: 1, price_date: 2026-11-04, has_price: true, currency: BRL, initial_cents: 14990, final_cents: 7495, discount_percent: 50}
+          - {app_id: 2, price_date: 2026-11-04, has_price: true, currency: BRL, initial_cents: 2499, final_cents: 2499, discount_percent: 0}
+          - {app_id: 3, price_date: 2026-11-04, has_price: false, currency: null, initial_cents: null, final_cents: null, discount_percent: null}
+    expect:
+      rows:
+        - {app_id: 1, is_on_sale: true}
+        - {app_id: 2, is_on_sale: false}
