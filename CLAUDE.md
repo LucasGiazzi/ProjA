@@ -10,18 +10,17 @@ A fonte da verdade é `docs/design.md`. Leia antes de qualquer tarefa nova. Se u
 
 ## Fase atual
 
-**Fase 2: silver e gold básicos**, em paralelo à contagem da Fase 1. Nada de modelo ou app ainda.
+**Fase 3: histórico**, em paralelo à contagem da Fase 1. Nada de modelo ou app ainda.
 
-**Fase 1 em acompanhamento:** a coleta precisa completar 7 dias seguidos sem falha nas execuções agendadas, a partir de 2026-11-05. Não altere `daily.yml` nem `dbt/seeds/catalog.csv` durante a contagem.
+**Fase 1 em acompanhamento:** a coleta precisa completar 7 dias seguidos sem falha nas execuções agendadas, a partir de 2026-11-05. Não altere `daily.yml`, `ingestion/steam_prices.py` nem `dbt/seeds/catalog.csv` durante a contagem.
 
-Tarefas da Fase 2, uma por vez, nesta ordem:
-1. Projeto dbt em `dbt/`: `dbt-duckdb`, perfil, seed do catálogo e fonte da bronze no Hugging Face.
-2. `stg_steam_prices`: extrair e tipar os campos de `raw_json`, com testes.
-3. `fct_price_daily`: uma linha por jogo e dia, com testes de qualidade.
-4. `fct_sale_events`: cada promoção com início, fim e desconto máximo.
-5. `.github/workflows/dbt.yml`: `dbt build` no Actions em workflow separado, com `workflow_dispatch`.
+Tarefas da Fase 3, nesta ordem:
+1. `ingestion/itad_history.py`: carga única e local do histórico dos jogos do catálogo para a bronze, sem filtro.
+2. `stg_itad_history`: extrair e tipar os registros.
+3. Confirmar o corte de 2019-01-01 no catálogo inteiro.
+4. Unir ao `fct_price_daily`, preenchendo os dias entre registros do ITAD; nos dias com as duas fontes, vale a Steam.
 
-Ao fim da Fase 2, pare e peça confirmação antes da Fase 3.
+Ao fim da Fase 3, pare e peça confirmação antes da Fase 4.
 
 ## Stack
 

@@ -165,7 +165,7 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 | 6. App V1 | 3 telas no Streamlit Cloud | Link público funcionando |
 | 7. V2 | Perfil de qualquer usuário | Fora da V1 |
 
-Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, exceto a Fase 1, que deve continuar rodando em paralelo a todas as outras. Exceção aprovada: a Fase 2 começou durante a contagem de 7 dias da Fase 1, que ainda precisa cumprir seu critério.
+Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, exceto a Fase 1, que deve continuar rodando em paralelo a todas as outras. Exceção aprovada: as Fases 2 e 3 começaram durante a contagem de 7 dias da Fase 1, que ainda precisa cumprir seu critério.
 
 ## 12. Registro de decisões
 
@@ -184,3 +184,6 @@ Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, excet
 | 2026-11-04 | Wishlist do autor faz parte do catálogo | Toda linha da tela "Sua wishlist" precisa de previsão na V1 |
 | 2026-11-04 | Catálogo: jogos pagos mais vendidos da loja Brasil + wishlist; gratuitos fora | Critério simples e reproduzível; jogo gratuito não entra em promoção. Favorece títulos populares, aceitável na V1 |
 | 2026-11-04 | Fase 2 iniciada durante a contagem de 7 dias da Fase 1 | O dbt só lê a bronze e não interfere na coleta; evita ficar parado até 2026-11-11 |
+| 2026-11-04 | Fase 3 iniciada durante a contagem de 7 dias da Fase 1 | A carga do ITAD é única, grava em outra pasta da bronze e não toca na coleta diária |
+| 2026-11-04 | Carga do ITAD roda uma vez, localmente | Execução única, sem necessidade de mais um secret no GitHub |
+| 2026-11-04 | Nos dias com as duas fontes, vale o preço da Steam; preenchimento só no período do ITAD | A Steam é a medição direta, e buraco na coleta diária deve continuar visível como falha |
