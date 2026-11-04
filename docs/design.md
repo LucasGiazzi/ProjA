@@ -69,7 +69,7 @@ salário mínimo                                        gold: tabelas do app
 | IsThereAnyDeal API | Histórico de preços para treino | Chave gratuita | Validado na Fase 0: histórico em BRL, usado a partir de 2019-01-01 |
 | Steam `IWishlistService/GetWishlist` | Wishlist do autor | Perfil público | Validado na Fase 0 |
 | Steam `IPlayerService/GetOwnedGames` | Biblioteca (esconder jogos já comprados) | Chave da Steam Web API + perfil público | Validado na Fase 0 |
-| Seed: catálogo | Lista dos ~500 jogos, incluindo a wishlist do autor | Arquivo no repo, revisão mensal | A montar |
+| Seed: catálogo | Lista dos ~500 jogos: pagos mais vendidos da loja Brasil + wishlist do autor | Arquivo no repo, revisão mensal | A montar |
 | Seed: calendário de promoções | Datas das promoções sazonais da Steam | Arquivo no repo, manual | A montar |
 | Seed: salário mínimo BR | Custo em horas de trabalho | Arquivo no repo | A montar |
 
@@ -179,3 +179,4 @@ Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, excet
 | 2026-11-04 | Coleta de preços em lotes de 50, com divisão do lote em caso de HTTP 500 | Lotes grandes falham de forma imprevisível e sem resposta parcial |
 | 2026-11-04 | Histórico do ITAD usado a partir de 2019-01-01 | Preços em BRL anteriores oscilam e parecem convertidos |
 | 2026-11-04 | Wishlist do autor faz parte do catálogo | Toda linha da tela "Sua wishlist" precisa de previsão na V1 |
+| 2026-11-04 | Catálogo: jogos pagos mais vendidos da loja Brasil + wishlist; gratuitos fora | Critério simples e reproduzível; jogo gratuito não entra em promoção. Favorece títulos populares, aceitável na V1 |

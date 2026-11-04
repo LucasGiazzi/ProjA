@@ -10,17 +10,16 @@ A fonte da verdade é `docs/design.md`. Leia antes de qualquer tarefa nova. Se u
 
 ## Fase atual
 
-**Fase 0: testes de viabilidade.** Nada de pipeline, dbt ou modelo ainda.
+**Fase 1: coleta diária.** A Fase 0 terminou e os resultados estão em `spikes/FINDINGS.md`. Nada de dbt, modelo ou app ainda.
 
 Tarefas, uma por vez, nesta ordem:
-1. `spikes/steam_prices.py`: consultar `https://store.steampowered.com/api/appdetails` com `cc=br` e `filters=price_overview` para 5 appids conhecidos. Confirmar que a moeda é BRL e registrar o formato da resposta.
-2. No mesmo script, testar a consulta agrupada (`appids=a,b,c` com `filters=price_overview`). Registrar se funciona e qual o máximo por chamada.
-3. Criar `.github/workflows/spike.yml` com `workflow_dispatch` rodando o script do item 1 no GitHub Actions. Confirmar que a moeda continua BRL vindo de um servidor fora do Brasil.
-4. `spikes/itad_history.py`: buscar o histórico de preço de 3 jogos na API do IsThereAnyDeal. Registrar profundidade do histórico e se há preço em BRL na loja Steam.
-5. `spikes/steam_profile.py`: buscar a wishlist (`IWishlistService/GetWishlist/v1`) e a biblioteca (`IPlayerService/GetOwnedGames/v1`) do perfil do Lucas.
-6. Registrar as respostas em `spikes/FINDINGS.md` e propor os ajustes no `docs/design.md`.
+1. Ambiente: `venv` com Python 3.12 e `requirements.txt`.
+2. `ingestion/build_catalog.py`: gerar `dbt/seeds/catalog.csv` com os ~500 jogos pagos mais vendidos da loja Brasil, somando a wishlist do Lucas.
+3. `ingestion/steam_prices.py`: coletar o preço do catálogo em lotes de 50 e gravar a bronze no Hugging Face, particionada por data, com testes em `tests/`.
+4. `.github/workflows/daily.yml`: rodar a coleta todo dia, com `workflow_dispatch` para testes.
+5. Acompanhar até completar 7 dias seguidos sem falha.
 
-Ao fim da Fase 0, pare e peça confirmação antes da Fase 1.
+Ao fim da Fase 1, pare e peça confirmação antes da Fase 2. A coleta continua rodando nas fases seguintes.
 
 ## Stack
 
