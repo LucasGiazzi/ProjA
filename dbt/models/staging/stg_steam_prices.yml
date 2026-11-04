@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: stg_steam_prices
+    description: Preços da Steam tipados, uma linha por jogo e dia de coleta.
+    columns:
+      - name: app_id
+        description: Appid do jogo na Steam.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('catalog')
+                field: app_id
+      - name: price_date
+        description: Data UTC da coleta, vinda da partição da bronze.
+        data_tests:
+          - not_null
+      - name: collected_at
+        data_tests:
+          - not_null
+      - name: http_status
+        description: Status da chamada que trouxe o jogo; 0 indica falha de rede.
+        data_tests:
+          - not_null
+      - name: has_response
+        description: Verdadeiro se a Steam respondeu para este jogo.
+      - name: is_success
+        description: Campo success da resposta; falso quando não houve resposta.
+      - name: has_price
+        description: Verdadeiro se a resposta traz price_overview.
+      - name: currency
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["BRL"]
+      - name: initial_cents
+        description: Preço sem desconto, em centavos.
+      - name: final_cents
+        description: Preço pago, em centavos.
+      - name: discount_percent
+        description: Desconto de 0 a 100.
+
+unit_tests:
+  - name: stg_steam_prices_parses_each_response_kind
+    description: Cobre preço com desconto, data vazia, success falso e falha de coleta.
+    model: stg_steam_prices
+    given:
+      # Formato sql: a fonte é externa, então o dbt não consegue ler as colunas dela.
+      - input: source('bronze', 'steam_prices')
+        format: sql
+        rows: |
+          select *
+          from (values
+              (1::bigint, '{"success": true, "data": {"price_overview": {"currency": "BRL", "initial": 14990, "final": 7495, "discount_percent": 50}}}', timestamptz '2026-11-04 12:00:00+00', 'steam_appdetails', 200, date '2026-11-04'),
+              (2::bigint, '{"success": true, "data": []}', timestamptz '2026-11-04 12:00:00+00', 'steam_appdetails', 200, date '2026-11-04'),
+              (3::bigint, '{"success": false}', timestamptz '2026-11-04 12:00:00+00', 'steam_appdetails', 200, date '2026-11-04'),
+              (4::bigint, null, timestamptz '2026-11-04 12:00:00+00', 'steam_appdetails', 500, date '2026-11-04')
+          ) as fixture (app_id, raw_json, collected_at, source, http_status, "date")
+    expect:
+      rows:
+        - {app_id: 1, price_date: 2026-11-04, has_response: true, is_success: true, has_price: true, currency: BRL, initial_cents: 14990, final_cents: 7495, discount_percent: 50}
+        - {app_id: 2, price_date: 2026-11-04, has_response: true, is_success: true, has_price: false, currency: null, initial_cents: null, final_cents: null, discount_percent: null}
+        - {app_id: 3, price_date: 2026-11-04, has_response: true, is_success: false, has_price: false, currency: null, initial_cents: null, final_cents: null, discount_percent: null}
+        - {app_id: 4, price_date: 2026-11-04, has_response: false, is_success: false, has_price: false, currency: null, initial_cents: null, final_cents: null, discount_percent: null}
