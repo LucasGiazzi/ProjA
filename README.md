@@ -31,10 +31,10 @@ I built it to gain hands-on experience in my field with something I enjoy outsid
 | 2. Silver and gold | dbt project with tests | Done |
 | 3. History | Price history merged into the daily table | Done |
 | 4. Model | Features, baseline, logistic regression, report | Done |
-| 5. Predictions and scoreboard | Daily append-only predictions and aggregate hit rate | On hold |
-| 6. App | Local Streamlit app with 3 screens | On hold |
+| 5. Predictions and scoreboard | Daily append-only predictions and aggregate hit rate | Planned |
+| 6. App | Local Streamlit app with 3 screens | Planned |
 
-Phases 5 and 6 are on hold while I confirm data use with a data provider. This is a study project: the app is meant to run locally, and neither an app nor the collected data will be published. Only the code and aggregate results are public. The first scoreboard result can only exist 30 days after daily predictions begin, because each forecast needs its full window to be checked.
+This is a study project: the app is meant to run locally, and neither an app nor the collected data will be published. Only the code and aggregate results are public. The first scoreboard result can only exist 30 days after daily predictions begin, because each forecast needs its full window to be checked.
 
 ## Objectives
 
@@ -134,8 +134,8 @@ The project started with feasibility tests, and several findings changed the pla
 | [Model vs. baseline report](docs/model_report.md) | Done |
 | [Feasibility findings](spikes/FINDINGS.md) | Done |
 | [Design document and decision log](docs/design.md) | Maintained throughout the project |
-| Aggregate scoreboard, comparing model and baseline over time | On hold |
-| Local Streamlit app | On hold |
+| Aggregate scoreboard, comparing model and baseline over time | Planned |
+| Local Streamlit app | Planned |
 
 ## Budget
 
@@ -148,7 +148,7 @@ Infrastructure cost is **$0**, using free tiers of GitHub Actions and Hugging Fa
 | Phases 0 to 4 completed | 2026-11-04 |
 | First scheduled collection | 2026-11-05 |
 | Earliest end of the 7-day collection check | 2026-11-11 |
-| Predictions and scoreboard | After the data provider's reply |
+| Predictions and scoreboard | Next phase |
 | First resolved prediction | 30 days after predictions begin |
 
 ## Engineering practices

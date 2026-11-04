@@ -10,7 +10,7 @@ A fonte da verdade é `docs/design.md`. Leia antes de qualquer tarefa nova. Se u
 
 ## Fase atual
 
-**Em espera.** As Fases 0, 2, 3 e 4 estão concluídas. O Lucas enviou um e-mail ao IsThereAnyDeal em 2026-11-04 sobre o uso dos dados; as Fases 5 e 6 só começam depois da resposta e da confirmação dele.
+**Aguardando a coleta agendada.** As Fases 0, 2, 3 e 4 estão concluídas. O IsThereAnyDeal confirmou por e-mail que o uso no formato de estudo está liberado. A Fase 5 só começa com a confirmação do Lucas.
 
 **Fase 1 em acompanhamento:** a coleta precisa completar 7 dias seguidos sem falha nas execuções agendadas, a partir de 2026-11-05. Não altere `daily.yml`, `ingestion/steam_prices.py` nem `dbt/seeds/catalog.csv` durante a contagem. Se a coleta falhar, ela tem prioridade sobre qualquer outra tarefa.
 

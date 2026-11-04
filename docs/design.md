@@ -139,7 +139,7 @@ Seeds no repo: catálogo, calendário de promoções      gold: placar de acerto
 
 ## 9. App (V1)
 
-Streamlit local, lendo apenas a camada gold, sem deploy público. As telas abaixo dependem da resposta do ITAD sobre o uso dos dados.
+Streamlit local, lendo apenas a camada gold, sem deploy público.
 
 1. **Sua wishlist:** preço atual, menor preço histórico, probabilidade em 30 dias, rótulo e desconto típico. Jogos da biblioteca ficam ocultos.
 2. **Preço absurdo:** jogos do catálogo no menor preço histórico ou perto dele, ordenados por relevância.
@@ -166,7 +166,7 @@ Streamlit local, lendo apenas a camada gold, sem deploy público. As telas abaix
 | `daily.yml` instala as dependências de ML e roda todos os testes antes de coletar, então uma falha alheia à coleta a impediria | `ci.yml` testa o mesmo ambiente a cada push. Separar as dependências e os passos depois da contagem da Fase 1 |
 | `itad_history.py` e `steam_details.py` importam funções de `steam_prices.py` | Mover para um módulo `bronze.py` depois da contagem da Fase 1 |
 | Termos de uso para publicar o dataset | Resolvido: o dataset fica privado. Termos lidos em 2026-11-04; os da Steam licenciam a distribuição a usuários finais pelo app, sem cláusula sobre datasets públicos |
-| Termos do ITAD proíbem app que possa ser visto como concorrente, e uso privado pede contato prévio | E-mail enviado pelo autor em 2026-11-04, aguardando resposta. Sem app público, o risco de concorrência cai. Fases 5 e 6 em espera até lá |
+| Termos do ITAD proíbem app que possa ser visto como concorrente, e uso privado pede contato prévio | Resolvido: o ITAD respondeu por e-mail que o uso está liberado, no formato descrito ao autor: estudo sem app público nem dados publicados. Manter esse formato; qualquer mudança pede novo contato |
 
 ## 11. Fases de execução
 
@@ -177,8 +177,8 @@ Streamlit local, lendo apenas a camada gold, sem deploy público. As telas abaix
 | 2. Silver e gold básicos | Projeto dbt com `stg`, `fct_price_daily`, `fct_sale_events`, testes | Cumprido em 2026-11-04: `dbt build` verde no Actions |
 | 3. Histórico | Carga única do ITAD integrada à silver | Cumprido em 2026-11-04: histórico unificado por jogo, com `dbt build` verde no Actions |
 | 4. Modelo | Features, baseline, logística, MLflow | Cumprido em 2026-11-04: `docs/model_report.md`. Modelo superou o baseline e a regra "sempre sim" |
-| 5. Previsões e placar | Previsões diárias append-only + placar agregado no repositório | Em espera pela resposta do ITAD. Critério: primeira previsão resolvida |
-| 6. App V1 | 3 telas no Streamlit local | Em espera pela resposta do ITAD. Critério: app funcionando localmente |
+| 5. Previsões e placar | Previsões diárias append-only + placar agregado no repositório | Pendente, depois da confirmação do Lucas. Critério: primeira previsão resolvida |
+| 6. App V1 | 3 telas no Streamlit local | Pendente. Critério: app funcionando localmente |
 | 7. V2 | Perfil de qualquer usuário | Suspensa |
 
 Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, exceto a Fase 1, que deve continuar rodando em paralelo a todas as outras. Exceção aprovada: as Fases 2, 3 e 4 começaram durante a contagem de 7 dias da Fase 1, que ainda precisa cumprir seu critério.
@@ -210,3 +210,4 @@ Regra: não iniciar uma fase sem a anterior cumprir o critério de pronto, excet
 | 2026-11-04 | Projeto de estudo: sem app público nem dataset público. Substitui a publicação prevista nas decisões anteriores | Decisão do Lucas; o objetivo é aprendizado e portfólio |
 | 2026-11-04 | Repositório público só com código e resultados agregados; app local | Mantém o portfólio visível sem publicar os dados coletados, como informado ao ITAD |
 | 2026-11-04 | `ci.yml` substitui `dbt.yml` e passa a rodar o pytest; `spike.yml` removido | Testa no Linux o mesmo ambiente da coleta, sem alterar `daily.yml` |
+| 2026-11-04 | Uso da API do ITAD confirmado por e-mail para o projeto de estudo | O autor consultou o ITAD e recebeu resposta positiva |
