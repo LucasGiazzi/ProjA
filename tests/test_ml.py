@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ml import dataset, evaluate, train
+from ml import dataset, evaluate, report, train
 
 
 def dates_frame(days: pd.DatetimeIndex) -> pd.DataFrame:
@@ -91,5 +91,5 @@ def test_calibrated_baseline_uses_training_rates_only() -> None:
 
 
 def test_lower_brier_counts_as_better() -> None:
-    assert train.beats({"brier": 0.1}, {"brier": 0.2}, "brier")
-    assert not train.beats({"f1": 0.1}, {"f1": 0.2}, "f1")
+    assert report.beats({"brier": 0.1}, {"brier": 0.2}, "brier")
+    assert not report.beats({"f1": 0.1}, {"f1": 0.2}, "f1")

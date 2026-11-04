@@ -17,6 +17,7 @@ from ingestion.build_catalog import CATALOG_PATH
 from ingestion.config import load_local_env, require_env
 from ingestion.steam_prices import (
     BRONZE_SCHEMA,
+    MIN_SUCCESS_RATE,
     read_catalog,
     success_rate,
     upload_table,
@@ -27,7 +28,6 @@ logger = logging.getLogger(__name__)
 SOURCE = "steam_details"
 BRONZE_PREFIX = "steam_details"
 DETAILS_FILTERS = "basic,release_date,publishers,developers,genres"
-MIN_SUCCESS_RATE = 0.95
 PROGRESS_INTERVAL = 100
 
 

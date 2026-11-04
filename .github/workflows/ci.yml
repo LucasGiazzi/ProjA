@@ -1,21 +1,24 @@
-# Constrói e testa os modelos dbt a partir da bronze no Hugging Face.
+# Testa o código e reconstrói os modelos dbt a partir da bronze no Hugging Face.
 # Separado da coleta para não alterar daily.yml durante a contagem da Fase 1.
-name: dbt build
+name: CI
 
 on:
   push:
     branches: [main]
     paths:
       - "dbt/**"
+      - "ingestion/**"
+      - "ml/**"
+      - "tests/**"
       - "requirements.txt"
-      - ".github/workflows/dbt.yml"
+      - ".github/workflows/ci.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: dbt-build
+  group: ci
   cancel-in-progress: true
 
 jobs:
@@ -30,6 +33,8 @@ jobs:
           cache: pip
       - name: Instala dependências
         run: pip install -r requirements.txt
+      - name: Roda os testes
+        run: python -m pytest -q
       - name: Roda o dbt build
         working-directory: dbt
         run: dbt build --profiles-dir . --no-use-colors

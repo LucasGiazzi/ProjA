@@ -19,7 +19,12 @@ import pyarrow as pa
 
 from ingestion.build_catalog import CATALOG_PATH
 from ingestion.config import load_local_env, require_env
-from ingestion.steam_prices import read_catalog, success_rate, upload_table
+from ingestion.steam_prices import (
+    MIN_SUCCESS_RATE,
+    read_catalog,
+    success_rate,
+    upload_table,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +49,6 @@ HTTP_TOO_MANY_REQUESTS = 429
 NETWORK_ERROR_STATUS = 0
 PROGRESS_INTERVAL = 100
 
-MIN_SUCCESS_RATE = 0.95
 
 BRONZE_SCHEMA = pa.schema(
     [
