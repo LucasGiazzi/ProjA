@@ -145,6 +145,7 @@ Streamlit Community Cloud, lendo apenas a camada gold.
 | Quanto histórico o ITAD fornece, e em BRL? | Respondido: desde o lançamento, em BRL, confiável a partir de 2019 (`spikes/FINDINGS.md`) |
 | Steam devolve HTTP 500 em alguns lotes grandes, por causa desconhecida | Lotes de 50, divisão do lote em caso de falha e falhas registradas em log |
 | Corte de 2019 no histórico do ITAD veio de apenas 3 jogos | Confirmar no catálogo completo na Fase 3 |
+| Catálogo gerado pelos mais vendidos pode favorecer jogos em promoção na data da geração (225 de 497 no primeiro dia) | Avaliar o efeito no modelo na Fase 4 |
 | Endpoint da Steam pode mudar sem aviso | Testes de volume no dbt alertam; coletor isolado facilita ajuste |
 | Onde persistir o MLflow (a máquina do Actions é apagada a cada execução)? | Decidir na Fase 4: MLflow hospedado gratuito (ex.: DagsHub) ou diretório de runs salvo no Hugging Face |
 | Termos de uso para publicar o dataset | Revisar termos da Steam e do ITAD antes de tornar o dataset público; começar privado |

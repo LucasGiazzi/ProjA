@@ -1,0 +1,38 @@
+# Coleta diária de preços da Steam para a bronze no Hugging Face.
+name: Coleta diária
+
+on:
+  schedule:
+    # 09:07 UTC (06:07 em Brasília). Fora do horário cheio, quando o
+    # agendamento do GitHub costuma atrasar mais.
+    - cron: "7 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Duas execuções ao mesmo tempo gravariam a mesma partição.
+concurrency:
+  group: daily-collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Instala dependências
+        run: pip install -r requirements.txt
+      - name: Roda os testes
+        run: python -m pytest -q
+      - name: Coleta preços
+        run: python -m ingestion.steam_prices
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_DATASET_REPO: ${{ secrets.HF_DATASET_REPO }}
+          HF_HUB_DISABLE_PROGRESS_BARS: "1"
