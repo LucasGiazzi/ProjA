@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: fct_sale_events
+    description: Cada promoção observada, com início, fim e desconto máximo.
+    columns:
+      - name: sale_id
+        description: Identificador da promoção, formado por jogo e data de início.
+        data_tests:
+          - not_null
+          - unique
+      - name: app_id
+        description: Appid do jogo na Steam.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('catalog')
+                field: app_id
+      - name: start_date
+        description: Primeiro dia com desconto observado.
+        data_tests:
+          - not_null
+      - name: end_date
+        description: Último dia com desconto observado; vazio se a promoção está aberta.
+      - name: max_discount_percent
+        description: Maior desconto observado na promoção.
+        data_tests:
+          - not_null
+      - name: min_final_cents
+        description: Menor preço pago observado, em centavos.
+        data_tests:
+          - not_null
+      - name: days_observed
+        description: Dias com desconto observados; pode ser menor que a duração se houve buraco na coleta.
+        data_tests:
+          - not_null
+      - name: start_is_known
+        description: Falso se a promoção já existia na primeira observação do jogo.
+        data_tests:
+          - not_null
+      - name: is_open
+        description: Verdadeiro se nenhum preço cheio foi observado depois da promoção.
+        data_tests:
+          - not_null
+
+unit_tests:
+  - name: fct_sale_events_groups_days_into_sales
+    description: Cobre início desconhecido, promoção aberta, buraco na coleta e jogo sem promoção.
+    model: fct_sale_events
+    given:
+      - input: ref('fct_price_daily')
+        rows:
+          # Jogo 1: promoção fechada com desconto variável e outra ainda aberta.
+          - {app_id: 1, price_date: 2026-11-01, final_cents: 1000, discount_percent: 0, is_on_sale: false}
+          - {app_id: 1, price_date: 2026-11-02, final_cents: 800, discount_percent: 20, is_on_sale: true}
+          - {app_id: 1, price_date: 2026-11-03, final_cents: 500, discount_percent: 50, is_on_sale: true}
+          - {app_id: 1, price_date: 2026-11-04, final_cents: 1000, discount_percent: 0, is_on_sale: false}
+          - {app_id: 1, price_date: 2026-11-05, final_cents: 900, discount_percent: 10, is_on_sale: true}
+          # Jogo 2: já em promoção no primeiro dia e com buraco em 11-02.
+          - {app_id: 2, price_date: 2026-11-01, final_cents: 700, discount_percent: 30, is_on_sale: true}
+          - {app_id: 2, price_date: 2026-11-03, final_cents: 700, discount_percent: 30, is_on_sale: true}
+          - {app_id: 2, price_date: 2026-11-04, final_cents: 1000, discount_percent: 0, is_on_sale: false}
+          # Jogo 3: nunca teve desconto, não gera promoção.
+          - {app_id: 3, price_date: 2026-11-01, final_cents: 1000, discount_percent: 0, is_on_sale: false}
+          # Jogo 4: só um dia observado, em promoção.
+          - {app_id: 4, price_date: 2026-11-01, final_cents: 500, discount_percent: 50, is_on_sale: true}
+    expect:
+      rows:
+        - {sale_id: "1-20261102", app_id: 1, start_date: 2026-11-02, end_date: 2026-11-03, max_discount_percent: 50, min_final_cents: 500, days_observed: 2, start_is_known: true, is_open: false}
+        - {sale_id: "1-20261105", app_id: 1, start_date: 2026-11-05, end_date: null, max_discount_percent: 10, min_final_cents: 900, days_observed: 1, start_is_known: true, is_open: true}
+        - {sale_id: "2-20261101", app_id: 2, start_date: 2026-11-01, end_date: 2026-11-03, max_discount_percent: 30, min_final_cents: 700, days_observed: 2, start_is_known: false, is_open: false}
+        - {sale_id: "4-20261101", app_id: 4, start_date: 2026-11-01, end_date: null, max_discount_percent: 50, min_final_cents: 500, days_observed: 1, start_is_known: false, is_open: true}

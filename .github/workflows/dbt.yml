@@ -1,0 +1,39 @@
+# Constrói e testa os modelos dbt a partir da bronze no Hugging Face.
+# Separado da coleta para não alterar daily.yml durante a contagem da Fase 1.
+name: dbt build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dbt/**"
+      - "requirements.txt"
+      - ".github/workflows/dbt.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dbt-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Instala dependências
+        run: pip install -r requirements.txt
+      - name: Roda o dbt build
+        working-directory: dbt
+        run: dbt build --profiles-dir . --no-use-colors
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_DATASET_REPO: ${{ secrets.HF_DATASET_REPO }}
+          DBT_SEND_ANONYMOUS_USAGE_STATS: "false"
