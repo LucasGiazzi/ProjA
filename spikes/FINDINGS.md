@@ -74,7 +74,7 @@ Não foi descartada uma combinação específica de jogos. Quando um lote falha,
 
 ## Steam: servidor fora do Brasil
 
-Workflow: `.github/workflows/spike.yml`, executado manualmente.
+Workflow `spike.yml`, executado manualmente. Ele foi removido ao fim da Fase 0 e continua no histórico do Git.
 
 - País do runner: `US`, consultado em `ipinfo.io`.
 - Moeda e preços dos 8 jogos iguais aos da execução local.
@@ -143,9 +143,9 @@ Script: `spikes/steam_profile.py`.
 
 Os três scripts em `spikes/` reproduzem os resultados principais. A busca binária entre 100 e 200 jogos e a análise por ano do ITAD foram feitas em scripts temporários, fora do repositório. Os jogos em promoção e a amostra da busca mudam com o tempo, então os números exatos podem variar.
 
-## Ajustes propostos no `docs/design.md`
+## Ajustes aplicados no `docs/design.md`
 
-Aprovados pelo Lucas e aplicados em 2026-11-04.
+Aprovados pelo Lucas e aplicados em 2026-11-04. O estado atual de cada decisão está no design.
 
 | Seção | Ajuste | Motivo |
 |---|---|---|
@@ -170,6 +170,4 @@ Linhas propostas para o "Registro de decisões":
 
 ## Pendências antes da Fase 1
 
-- Instalar o Python 3.12 na máquina local.
-- Criar o token de escrita do Hugging Face e o dataset, começando privado.
-- Cadastrar os segredos necessários no GitHub, porque o `.env` local não vai para o Actions.
+Todas resolvidas em 2026-11-04.

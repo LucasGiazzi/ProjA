@@ -1,15 +1,15 @@
 # Should I Wait for the Sale?
 
-**An end-to-end data project that predicts whether a Steam game will go on sale in Brazil within the next 30 days.**
+**A study project: an end-to-end data pipeline that predicts whether a Steam game will go on sale in Brazil within the next 30 days.**
 
 ![Status](https://img.shields.io/badge/status-in%20progress-yellow)
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 ![dbt](https://img.shields.io/badge/dbt-duckdb-orange)
 ![Cost](https://img.shields.io/badge/infrastructure%20cost-%240-brightgreen)
 
-PC game prices in Brazil have climbed past R$ 400, and existing tools only show what already happened: Steam notifies you once a sale has started, and price trackers show history. This project answers the question a buyer actually has **before** paying: *buy now, or wait?*
+PC game prices in Brazil have climbed past R$ 400. Steam notifies you once a sale has started, and price tools focus mostly on history, alerts, and sale calendars. This project explores the question a buyer has **before** paying: *buy now, or wait?*
 
-I built it to gain hands-on experience in my field with something I enjoy outside of work: playing games. It covers both data engineering and data science, from raw API responses to an evaluated model.
+I built it to gain hands-on experience in my field with something I enjoy outside of work: playing games. It covers both data engineering and data science, from raw API responses to an evaluated model. It is a non-commercial learning project, not a replacement for existing tools: similar ideas exist, and the focus here is the method.
 
 ## Highlights
 
@@ -19,7 +19,7 @@ I built it to gain hands-on experience in my field with something I enjoy outsid
 | **Probability quality** | Brier score of 0.144, against 0.204 for the calibrated baseline |
 | **Harder test** | 73.6% accuracy on 137 games the model never saw in training |
 | **Data** | 500 games, 666k+ daily prices since 2019, 13,230 sale events |
-| **Quality** | 78 dbt build items and 48 pytest tests, running in CI |
+| **Quality** | 78 dbt build items and 48 pytest tests, running in CI on every push |
 | **Cost** | $0 in infrastructure |
 
 ## Project status
@@ -31,21 +31,21 @@ I built it to gain hands-on experience in my field with something I enjoy outsid
 | 2. Silver and gold | dbt project with tests | Done |
 | 3. History | Price history merged into the daily table | Done |
 | 4. Model | Features, baseline, logistic regression, report | Done |
-| 5. Predictions and scoreboard | Daily append-only predictions and public hit rate | Planned |
-| 6. App | Streamlit app with 3 screens | Planned |
+| 5. Predictions and scoreboard | Daily append-only predictions and aggregate hit rate | On hold |
+| 6. App | Local Streamlit app with 3 screens | On hold |
 
-There is no public app yet. The first scoreboard result can only exist 30 days after daily predictions begin, because each forecast needs its full window to be checked.
+Phases 5 and 6 are on hold while I confirm data use with a data provider. This is a study project: the app is meant to run locally, and neither an app nor the collected data will be published. Only the code and aggregate results are public. The first scoreboard result can only exist 30 days after daily predictions begin, because each forecast needs its full window to be checked.
 
 ## Objectives
 
 1. Tell a buyer the probability that a game goes on sale within 30 days, along with its typical discount.
 2. Run a reliable, automated pipeline for Brazilian prices at no cost.
-3. Prove model quality instead of claiming it, by comparing it with simple rules and publishing the result either way.
+3. Prove model quality instead of claiming it, by comparing it with simple rules and reporting the result either way.
 
 ## Benefits
 
-- **For buyers:** a decision made before paying, instead of finding out about a sale after the purchase.
-- **For trust:** a public scoreboard shows how often the predictions were right, including when they were wrong.
+- **For the buying decision:** an estimate made before paying, instead of finding out about a sale after the purchase.
+- **For trust:** results are measured against simple rules on data the model never saw, including where it falls short.
 - **For engineers reading this:** a compact, fully visible example of a tested data pipeline, with every decision written down.
 
 ## Scope
@@ -53,12 +53,12 @@ There is no public app yet. The first scoreboard result can only exist 30 days a
 **In scope for V1**
 - Brazil only, in BRL.
 - A catalog of 500 games: paid top sellers in the Brazilian store, plus my own wishlist.
-- A 30-day sale prediction, a baseline, and a public scoreboard.
-- A Streamlit app with three screens: wishlist, unusually low prices, and scoreboard.
+- A 30-day sale prediction, a baseline, and an aggregate scoreboard.
+- A local Streamlit app with three screens: wishlist, unusually low prices, and scoreboard.
 
-**Later versions:** predictions for any public Steam profile, recommendations, and region comparisons.
+**Possible future work:** recommendations and region comparisons.
 
-**Out of scope:** automatic purchases, push notifications, and stores other than Steam.
+**Out of scope:** a public app, publishing the collected data, automatic purchases, push notifications, and stores other than Steam.
 
 ## Architecture
 
@@ -75,7 +75,7 @@ flowchart LR
     H --> I[Model report]
 ```
 
-GitHub Actions schedules the collection and runs the tests. dbt builds and tests the transformations, with DuckDB as the query engine.
+GitHub Actions schedules the daily collection and runs tests and dbt on every push. dbt builds and tests the transformations, with DuckDB as the query engine. The history and game details are one-off local loads, and training also runs locally.
 
 **Why this stack:** it is free, fully visible on GitHub, and made of tools widely used in the industry. With hundreds of games and one row per day, Spark would add cost without adding value, so leaving it out was a deliberate choice.
 
@@ -120,7 +120,7 @@ The project started with feasibility tests, and several findings changed the pla
 
 | Group | Interest |
 |---|---|
-| PC gamers in Brazil | Knowing whether to buy now or wait |
+| PC gamers in Brazil, the reference user | Knowing whether to buy now or wait |
 | Recruiters and hiring teams | Evidence of practical data skills |
 | Me, as the author | Hands-on experience across the data lifecycle |
 
@@ -134,12 +134,12 @@ The project started with feasibility tests, and several findings changed the pla
 | [Model vs. baseline report](docs/model_report.md) | Done |
 | [Feasibility findings](spikes/FINDINGS.md) | Done |
 | [Design document and decision log](docs/design.md) | Maintained throughout the project |
-| Public scoreboard, comparing model and baseline over time | Planned |
-| Public Streamlit app | Planned |
+| Aggregate scoreboard, comparing model and baseline over time | On hold |
+| Local Streamlit app | On hold |
 
 ## Budget
 
-Infrastructure cost is **$0**, using free tiers of GitHub Actions and Hugging Face, and free API access. Planned hosting on Streamlit Community Cloud is also free. The only investment is my own time.
+Infrastructure cost is **$0**, using free tiers of GitHub Actions and Hugging Face, and free API access. The only investment is my own time.
 
 ## Timeline
 
@@ -148,7 +148,7 @@ Infrastructure cost is **$0**, using free tiers of GitHub Actions and Hugging Fa
 | Phases 0 to 4 completed | 2026-11-04 |
 | First scheduled collection | 2026-11-05 |
 | Earliest end of the 7-day collection check | 2026-11-11 |
-| Predictions and scoreboard | Next phase |
+| Predictions and scoreboard | After the data provider's reply |
 | First resolved prediction | 30 days after predictions begin |
 
 ## Engineering practices
@@ -169,6 +169,7 @@ HF_TOKEN, HF_DATASET_REPO, ITAD_API_KEY, STEAM_API_KEY, STEAM_ID
 
 ```bash
 python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 python -m pytest                          # tests
@@ -182,7 +183,7 @@ python -m ml.train                        # train and write the report
 ```text
 ingestion/   Python collectors, one module per source
 dbt/         Models (staging, silver, gold), seeds, and tests
-ml/          Dataset, evaluation, and training
+ml/          Dataset, evaluation, training, and report
 spikes/      Feasibility tests and findings
 tests/       pytest suite
 docs/        Design document and model report
@@ -198,7 +199,7 @@ docs/        Design document and model report
 
 **AI assistance:** developed with [Claude Code](https://claude.com/claude-code) as a pair programmer.
 
-**Disclaimer:** this is an independent portfolio project. It is not affiliated with, endorsed by, or sponsored by Valve, Steam, or IsThereAnyDeal. Steam and the Steam logo are trademarks of Valve Corporation. Predictions are estimates and do not guarantee future prices. The collected data is kept in a private dataset and is not redistributed.
+**Disclaimer:** this is an independent portfolio project. It is not affiliated with, endorsed by, or sponsored by Valve, Steam, or IsThereAnyDeal. Steam and the Steam logo are trademarks of Valve Corporation. Predictions are estimates and do not guarantee future prices. The collected data stays in a private dataset and is not redistributed.
 
 ## Contact
 
